@@ -1,4 +1,5 @@
 const Account = require("../models/account.model");
+var passport = require('passport');
 
 exports.signup = (req, res, next) => {
   console.log(req.body); // form data will have email and password
@@ -30,21 +31,37 @@ exports.signup = (req, res, next) => {
     });
 };
 
-exports.login = (req, res, next) => {
+exports.login = (req, res) => {
+  // get the form data from req.body
+  console.log(req.body);
+  /*
+    1. check whether the email exists in db
+    2. if true, then decrypt the password
+      2.1. access the saved salt for the account
+      2.2. generate a new hash using the salt and password
+      2.3. compare the existing hash in db with the newly generated one.
+      2.4. if both matches login is valid.
+      2.5. if login is valid, then generate Json web token(JWT) send the token to the front end
+  */
+ 
   passport.authenticate("local", (err, account, info) => {
     if (err) {
+      res.json(err);
+    }
+ 
+    // if account is found
+    if (account) {
+      // generate Json Web Token (JWT) and send it in res
+      // const authToken = account.generateJWT();
       res.json({
-        message: err.message,
+        status: "Logged In Successfully!",
+        token: "authToken",
+      });
+    } else {
+      // send the info as response
+      res.json({
+        status: info,
       });
     }
- 
-    // if account found
-    if (account) {
-      // generate Json web token(JWT) and send it in res
-    }
- 
-    if (info) {
-      // send the info as response
-    }
-  })(req, res); // you need to pass the entire req and res obj -- not just req.body
+  })(req, res); // you need to pass the entire req and res object -- not just req.body
 };

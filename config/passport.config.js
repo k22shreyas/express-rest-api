@@ -1,40 +1,37 @@
-var passport = require("passport");
-var LocalStrategy = require("passport-local");
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
 const Account = require("../models/account.model");
  
-// basic config for login using passport's local strategy
+// basic config for login using passport local
 passport.use(
   new LocalStrategy(
     {
-      usernameField: 'email',
+      usernameField: "email",
     },
     function (email, password, done) {
-      console.log(email);
-      console.log(password);
- 
-      // checking in accounts collection
-      // email exists or not
       Account.findOne({ email: email })
         .then((account) => {
-          console.log(account);
-          // if the email found -- validate the password
-          // account.validatePassword(password);
-          if(!account.validatePassword(password)){
+          if (!account) {
+            // Return if account not found in database
+            return done(null, false, {
+              message: "Incorrect email or password.",
+            });
+          }
+ 
+          // Return if password is wrong
+          if (account && !account.validatePassword(password)) {
             return done(null, false, {
               message: "Password is wrong",
-            })
+            });
           }
+ 
+          // // If credentials are correct, return the account object
           return done(null, account);
-          
         })
         .catch((err) => {
-          // if email not found -- return the error message
-          console.log(err);
-          res.json({
-            message:
-              err.message ||
-              `Incorrect email or password`,
-          });
+          if (err) {
+            return done(err);
+          }
         });
     }
   )
